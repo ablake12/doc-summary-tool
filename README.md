@@ -1,4 +1,4 @@
-# article-summary-tool
+# document-summary-tool
 
 ## Prerequisites
 Python 3.6+
