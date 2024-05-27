@@ -1,10 +1,7 @@
-bert-extractive-summarizer
-gensim
-nltk==3.6.5
-pysummarization
-requests==2.26.0
-sentencepiece
-sumy
-torch
+bs4
+PyPDF2
+python-docx
+requests
+spacy
 transformers
-urllib3==1.26.7
+urllib3
