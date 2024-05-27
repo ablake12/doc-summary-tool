@@ -1,0 +1,8 @@
+data/*
+!data/.empty
+docs/*
+!docs/.empty
+env/
+venv/
+*.pyc
+src/summary_extract/training.py
