@@ -6,3 +6,4 @@ env/
 venv/
 *.pyc
 src/summary_extract/training.py
+src/summary_extract/testing.py
