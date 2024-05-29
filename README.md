@@ -17,7 +17,7 @@ python3 -m spacy download en_core_web_sm
 python3 src/main.py
 ```
 ## Adapted From
-json```
+```json
 @article{DBLP:journals/corr/abs-1910-13461,
   author    = {Mike Lewis and
                Yinhan Liu and
