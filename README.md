@@ -17,6 +17,7 @@ python3 -m spacy download en_core_web_sm
 python3 src/main.py
 ```
 ## Adapted From
+json```
 @article{DBLP:journals/corr/abs-1910-13461,
   author    = {Mike Lewis and
                Yinhan Liu and
@@ -38,6 +39,7 @@ python3 src/main.py
   biburl    = {https://dblp.org/rec/journals/corr/abs-1910-13461.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
+```
 ## Notes
 * Explain the difference between extractive and abstractive summaries
 * Based on the document type, recommend what summaries may work best (extractive: word docs or long pdfs (10+ pages), abstractive: online articles and shorter pdfs (a few pages))
