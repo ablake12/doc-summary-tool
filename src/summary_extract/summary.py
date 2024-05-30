@@ -81,6 +81,7 @@ class Summarization:
                 return False
         except Exception as error:
             error_msg = f"Error checking pdf encryption: {error}"
+            return error_msg
     def decrypt_pdf(self, password): # function to return whether the password is correct or not
         try:
             if self.pdf_reader.decrypt(password):
@@ -89,6 +90,7 @@ class Summarization:
                 return False
         except Exception as error:
             error_msg = f"Error encrypting pdf document: {error}"
+            return error_msg
     def get_pdf_content(self): # extracting content for a pdf file
         try:
             start_time = datetime.now()
@@ -167,7 +169,7 @@ class Summarization:
             else:
                 # the sentence gets added to the current chunk if it doesn't exceed the max length of tokens
                 current_chunk += sent.text + " "
-                
+
         if current_chunk: # the most recent chunk is being appended
             chunks.append(current_chunk.strip())
 
