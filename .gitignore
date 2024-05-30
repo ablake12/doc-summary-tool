@@ -1,5 +1,6 @@
 data/*
 !data/.empty
+!data/test_articles.txt
 docs/*
 !docs/.empty
 env/
