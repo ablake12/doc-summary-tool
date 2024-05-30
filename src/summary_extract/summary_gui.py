@@ -11,7 +11,8 @@ class summaryGUI:
 
         # initialize frame
         self.doc_frame = tk.Frame(self.window)
-        self.doc_frame.pack(fill=tk.X)
+        # self.doc_frame.pack(fill=tk.X)
+        self.doc_frame.pack(fill=tk.BOTH, expand=True)
 
         # Frame for bottom buttons
         self.exit_frame = tk.Frame(self.window)
@@ -75,7 +76,7 @@ class summaryGUI:
                 input_entry.pack(fill=tk.X, side=tk.LEFT)
                 self.enter_button = tk.Button(self.exit_frame, text = "Enter", activeforeground= "pink", highlightbackground='light sky blue', command=lambda url=input_entry: self.get_content(url))
             self.enter_button.pack(side=tk.LEFT, fill=tk.BOTH, padx=10, expand=True)
-            self.upload_frame.pack(fill=tk.X, side=tk.TOP)
+            self.upload_frame.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
     def get_content(self, entry_input):
         self.sum_label = tk.Label(self.content_frame, text = "Please choose the type of summarization:")
         # radio buttons to either get an extractive or abstractive summary
@@ -85,7 +86,7 @@ class summaryGUI:
             url = entry_input.get()
             if url:
                 self.window.geometry("500x125")
-                self.content_frame.pack(fill=tk.X, side=tk.TOP)
+                self.content_frame.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
                 self.upload_frame.destroy() # get rid of previous frame on the screen
                 self.enter_button.destroy()
                 summary = Summarization(3, url) # initialize summary object for article option
@@ -102,21 +103,21 @@ class summaryGUI:
                     self.window.destroy()
         else:
             if self.file_path:
-                self.content_frame.pack(fill=tk.X, side=tk.TOP)
+                self.content_frame.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
                 self.upload_frame.destroy()
                 self.enter_button.destroy()
                 if self.doc_var.get() == 1:
                     summary = Summarization(1, self.file_path) # initialize summary object for pdf option
                     if summary.is_pdf_encrypted() == True: # check to see if pdf is encrypted and if so prompt the user for the password
                         self.window.geometry("750x150")
-                        self.decrypt_frame.pack(fill=tk.X, side=tk.TOP)
+                        self.decrypt_frame.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
                         decrypt_label = tk.Label(self.decrypt_frame, text = f"This PDF file is encrypted.\nPlease enter password for {self.file_path}:")
                         decrypt_entry = tk.Entry(self.decrypt_frame, width=50, show="*")
                         self.decrypt_button = tk.Button(self.exit_frame, text = "Enter", activeforeground= "pink", highlightbackground='light sky blue', command=lambda summary_obj=summary, password=decrypt_entry: self.decrypt_pdf_file(summary_obj, password))
                         decrypt_label.pack()
                         decrypt_entry.pack()
                         self.decrypt_button.pack(side=tk.LEFT, fill=tk.BOTH, padx=10, expand=True)
-                    else:
+                    elif summary.is_pdf_encrypted() == False:
                         self.window.geometry("500x125")
                         msg, status = summary.get_pdf_content() # get content from unencrypted pdf file 
                         if status == 0:
@@ -129,6 +130,10 @@ class summaryGUI:
                         else: # if content couldn't be extracted exit program as it can't be summarized
                             messagebox.showerror("Content Extraction Failed", msg)
                             self.window.destroy()
+                    else:
+                        error_msg = summary.is_pdf_encrypted()
+                        messagebox.showerror("Could not check for encryption: ", error_msg)
+                        self.window.destroy()
                 elif self.doc_var.get() == 2: # get content for word doc then ask user for their preferred summary type
                     self.window.geometry("500x125")
                     summary = Summarization(2, self.file_path) # initialize summarization object for word doc option
@@ -151,12 +156,12 @@ class summaryGUI:
                     self.window.geometry("750x75")
                     self.content_frame.destroy() # get rid of previous frame on the screen
                     self.sum_button.destroy() # get rid of previous frame on the screen
-                    self.success_frame.pack(fill=tk.X, side=tk.TOP)
+                    self.success_frame.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
                     self.success_label = tk.Label(self.success_frame, text = msg)
                     self.success_label.pack() # add success message
                     messagebox.showinfo("Summarization Completed", msg)
                 else: # if summary failed let user know and exit program
-                    messagebox.showinfo("Summarization Failed", msg)
+                    messagebox.showerror("Summarization Failed", msg)
                     self.window.destroy()
             elif self.sum_var.get() == 2:
                 msg, status = summary.abstractive_summarize()
@@ -164,12 +169,12 @@ class summaryGUI:
                     self.window.geometry("750x75")
                     self.content_frame.destroy() # get rid of previous frame on the screen
                     self.sum_button.destroy() # get rid of previous frame on the screen
-                    self.success_frame.pack(fill=tk.X, side=tk.TOP)
+                    self.success_frame.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
                     self.success_label = tk.Label(self.success_frame, text = msg)
                     self.success_label.pack() # add success message
                     messagebox.showinfo("Summarization Completed", msg)
                 else: 
-                    messagebox.showinfo("Summarization Failed", msg)
+                    messagebox.showerror("Summarization Failed", msg)
                     self.window.destroy()
 
     def uploader(self, fileTypes): # upload function for pdf and word document option
@@ -201,8 +206,12 @@ class summaryGUI:
                 else:
                     messagebox.showerror("Content Extraction Failed", msg)
                     self.window.destroy()
-            else:
+            elif not summary.decrypt_pdf(password):
                 if self.incorrect_password_check == False:
                     incorrect_label = tk.Label(self.decrypt_frame, text = f"Incorrect password for {self.file_path}")
                     incorrect_label.pack()
                     self.incorrect_password_check = True
+            else:
+                error_msg = summary.decrypt_pdf(password)
+                messagebox.showerror("Could not decrypt the pdf file: ", error_msg)
+                self.window.destroy()
