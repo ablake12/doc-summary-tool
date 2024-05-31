@@ -1,19 +1,20 @@
 from bs4 import BeautifulSoup
-import requests
-import PyPDF2
-import docx
-import multiprocessing as mp
 from datetime import datetime
+import docx
+from http import HTTPStatus
+import PyPDF2
+import requests
+import multiprocessing as mp
 import os
 
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 from transformers import BartTokenizer, BartForConditionalGeneration
 
+from heapq import nlargest
 import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from string import punctuation
-from heapq import nlargest
 
 class Summarization:
     def __init__(self, doc_option, doc_input):
@@ -43,17 +44,23 @@ class Summarization:
         try:
             start_time = datetime.now()
             response = requests.get(self.url)
-            soup = BeautifulSoup(response.text, 'html.parser')
-            summary_title = soup.find('title').text
-            summary_title = summary_title.strip()
-            self.file_name = "docs/{:<0.50}_summary.txt".format(summary_title)
-            for paragraph in soup.find_all('p'):
-                text = " ".join(paragraph.text.split())
-                sentences = self.spacy_tokenizer(text)
-                for sent in sentences:
-                    self.content += sent.text + "\n"
-            content_msg = f"Content extracted successfully.\nRuntime of getting the content: {datetime.now() - start_time}"
-            return (content_msg, 0)
+            http_code = response.status_code
+            if http_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                summary_title = soup.find('title').text
+                summary_title = summary_title.strip()
+                self.file_name = "docs/{:<0.50}_summary.txt".format(summary_title)
+                for paragraph in soup.find_all('p'):
+                    text = " ".join(paragraph.text.split())
+                    sentences = self.spacy_tokenizer(text)
+                    for sent in sentences:
+                        self.content += sent.text + "\n"
+                content_msg = f"Content extracted successfully.\nRuntime of getting the content: {datetime.now() - start_time}"
+                return (content_msg, 0)
+            else:
+                http_msg = HTTPStatus(http_code).phrase
+                error_msg = f"Error retrieving content: {http_code} error - {http_msg}"
+                return (error_msg, -1)
         except Exception as error:
             error_msg = f"Error getting url content: {error}"
             return (error_msg, 1)
