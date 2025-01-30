@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import filedialog
 from tkinter import messagebox
 from .summary import Summarization
 
@@ -10,16 +9,16 @@ class summaryGUI:
         self.window.geometry("500x150")
 
         # initialize frame
-        self.doc_frame = tk.Frame(self.window)
+        self.doc_frame = tk.Frame(self.window) # list all three document options
         # self.doc_frame.pack(fill=tk.X)
         self.doc_frame.pack(fill=tk.BOTH, expand=True)
 
         # Frame for bottom buttons
-        self.exit_frame = tk.Frame(self.window)
+        self.exit_frame = tk.Frame(self.window) # generate and exit button
         self.exit_frame.pack(fill=tk.BOTH, pady=15, expand=True, side=tk.BOTTOM)
 
         # Frames being used in the program
-        self.upload_frame = tk.Frame(self.window)
+        self.upload_frame = tk.Frame(self.window) # frame for uploading word or pdf
         self.content_frame = tk.Frame(self.window)
         self.success_frame = tk.Frame(self.window)
         self.decrypt_frame = tk.Frame(self.window)
