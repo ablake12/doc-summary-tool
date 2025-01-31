@@ -18,6 +18,8 @@ python3 -m spacy download en_core_web_sm
 ```bash
 python3 src/main.py
 ```
+## Demo
+[Demo](https://youtu.be/hg0YrOxvaRA)
 ## More on this Summarization Tool:
 ### Extractive and Abstractive summaries
 - An extractive summary selects key sentences and phrases from the direct text to create a collective summary based on the word frequencies and sentence importance. This summary can be implemented with several ML libraries but in this case it uses the [spaCy library](https://spacy.io/) for this implementation. This summary is best for highlighting the important parts of your text.
