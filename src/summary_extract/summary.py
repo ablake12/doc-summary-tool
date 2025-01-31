@@ -157,9 +157,12 @@ class Summarization:
         except Exception as error:
             error_msg = f"Error with getting the extractive summary: {error}"
             return (error_msg, 1) # return failure message and code
+        
     def summarize_content(self, content, out_file): # function to summarize content using the bart model
         max_percentage = 0.25
         max_len = round(len(content) * max_percentage) # total amount of tokens for the summary (25% of original content)
+        if max_len < 56: # length constraint requires 56 as the minimum amount of tokens
+            max_len = 56
         input_ids = self.bart_tokenizer.encode(content, return_tensors='pt') # encodes into numerical input ids
         summary_ids = self.bart_model.generate(input_ids, num_beams=4, max_length=max_len, early_stopping=True) # generates summary based on input ids, amount of beams to search for summary, max length of tokens
         summary = self.bart_tokenizer.decode(summary_ids[0], skip_special_tokens=True) # decodes back into alphabetical summary
