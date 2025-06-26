@@ -16,6 +16,7 @@ import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from string import punctuation
 
+
 class Summarization:
     def __init__(self, doc_option, doc_input):
         if doc_option == 1:
@@ -157,19 +158,24 @@ class Summarization:
         except Exception as error:
             error_msg = f"Error with getting the extractive summary: {error}"
             return (error_msg, 1) # return failure message and code
-        
-    def summarize_content(self, content, out_file): # function to summarize content using the bart model
+
+    def summarize_content(self, content, temp_file): # function to summarize content using the bart model
+        # start_time = datetime.now()
         max_percentage = 0.25
         max_len = round(len(content) * max_percentage) # total amount of tokens for the summary (25% of original content)
         if max_len < 56: # length constraint requires 56 as the minimum amount of tokens
             max_len = 56
+            
         input_ids = self.bart_tokenizer.encode(content, return_tensors='pt') # encodes into numerical input ids
         summary_ids = self.bart_model.generate(input_ids, num_beams=4, max_length=max_len, early_stopping=True) # generates summary based on input ids, amount of beams to search for summary, max length of tokens
         summary = self.bart_tokenizer.decode(summary_ids[0], skip_special_tokens=True) # decodes back into alphabetical summary
         sentences = self.spacy_tokenizer(summary) # tokenizers to split into sentences
         summary_text = "\n".join([sent.text for sent in sentences])
-        out_file.write(summary_text + "\n") # write to outfile
-        out_file.flush() # saves summary to file quickly in case of file closure
+        # print(f"Runtime of chunk summarization: {datetime.now() - start_time}")
+
+        with open(temp_file, "w") as outfile:
+            outfile.write(summary_text + "\n") # write to outfile
+        # out_file.flush() # saves summary to file quickly in case of file closure
 
     def chunk_split(self, max_length):
         sentences = self.spacy_tokenizer(self.content) # use spacy tokenizer for getting sentences
@@ -194,20 +200,39 @@ class Summarization:
             chunk_size = 1024 # max tokens the model allows
             if len(self.content) > chunk_size: # if the content is more than the model allows it has to be chunked
                 chunks = self.chunk_split(chunk_size) # split into chunks based on sentences
-                max_threads = mp.cpu_count() # using the max cpus for workers
-                with open(self.file_name, "w") as out_file:
-                    with ThreadPoolExecutor(max_workers=max_threads) as executor: # chunks are summarized in parallel
-                        retrieval_tasks = []
-                        for i in range(len(chunks)):
-                            task = executor.submit(self.summarize_content, chunks[i], out_file)
-                            retrieval_tasks.append(task)
-                    concurrent.futures.wait(retrieval_tasks) # waits for all the tasks to be completed
+                max_cpus = min(4, mp.cpu_count()) # using the max cpus on the machine for workers
+                if not os.path.exists("docs/temp"):
+                    os.makedirs("docs/temp")
+                print(f"Number of chunks to be summarized: {len(chunks)}")
+                print(f"Number of CPUs: {max_cpus}")
+                with ThreadPoolExecutor(max_workers=max_cpus) as executor: # chunks are summarized in parallel
+                    retrieval_tasks = []
+                    for i in range(len(chunks)):
+                    # for chunk in chunks:
+                        if i < 9:
+                            temp_file_name = f"docs/temp/temp0{i+1}.txt"
+                        else:
+                            temp_file_name = f"docs/temp/temp{i+1}.txt"
+                        task = executor.submit(self.summarize_content, chunks[i], temp_file_name)
+                        # task = executor.submit(self.summarize_content, chunk)
+                        retrieval_tasks.append(task)
+                concurrent.futures.wait(retrieval_tasks) # waits for all the tasks to be completed
+                with open(self.file_name, "w") as outfile:
+                    # for summary in retrieval_tasks:
+                    #     outfile.write(summary)
+                    for file in sorted(os.listdir("docs/temp")):
+                        with open(os.path.join("docs/temp", file), "r") as temp_file:
+                            temp_content = temp_file.read()
+                            outfile.write(temp_content)
+                        os.remove(os.path.join("docs/temp", file))
+                os.rmdir("docs/temp")
             else: # if the content is less than 1024 tokens it can just be summarized and written to the file
-                with open(self.file_name, "w") as out_file:
-                    self.summarize_content(self.content, out_file)
+                with open(self.file_name, "w") as outfile:
+                    self.summarize_content(self.content, outfile)
             summary_msg = f"Abstractive summary extracted to {self.file_name}"
             print(summary_msg)
             return (summary_msg, 0)
         except Exception as error:
             error_msg = f"Error with getting the abstractive summary: {error}"
+            print(error_msg)
             return (error_msg, 1)
